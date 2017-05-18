@@ -233,7 +233,10 @@ module JSONAPI
       protected :evaluate_attr_or_block
     end
 
-    def self.find_serializer_class_name(object, options)
+    def self.find_serializer_class_name(object, options, override_with_options = false)
+      if override_with_options && options[:serializer]
+        return options[:serializer]
+      end
       if options[:namespace]
         return "#{options[:namespace]}::#{object.class.name}Serializer"
       end
@@ -243,8 +246,8 @@ module JSONAPI
       "#{object.class.name}Serializer"
     end
 
-    def self.find_serializer_class(object, options)
-      class_name = find_serializer_class_name(object, options)
+    def self.find_serializer_class(object, options, override_with_options = false)
+      class_name = find_serializer_class_name(object, options, override_with_options)
       class_name.constantize
     end
 
@@ -451,7 +454,7 @@ module JSONAPI
         # Skip the sentinal value, but we need to preserve it for siblings.
         next if attribute_name == :_include
 
-        serializer = JSONAPI::Serializer.find_serializer(root_object, options)
+        serializer = JSONAPI::Serializer.find_serializer(root_object, options, true)
         unformatted_attr_name = serializer.unformat_name(attribute_name).to_sym
 
         # We know the name of this relationship, but we don't know where it is stored internally.
@@ -494,7 +497,7 @@ module JSONAPI
           # If it is not set, that indicates that this is an inner path and not a leaf and will
           # be followed by the recursion below.
           objects.each do |obj|
-            obj_serializer = JSONAPI::Serializer.find_serializer(obj, options)
+            obj_serializer = JSONAPI::Serializer.find_serializer(obj, options, true)
             # Use keys of ['posts', '1'] for the results to enforce uniqueness.
             # Spec: A compound document MUST NOT include more than one resource object for each
             # type and id pair.
