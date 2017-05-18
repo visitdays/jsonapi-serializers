@@ -251,8 +251,8 @@ module JSONAPI
       class_name.constantize
     end
 
-    def self.find_serializer(object, options)
-      find_serializer_class(object, options).new(object, options)
+    def self.find_serializer(object, options, override_with_options = false)
+      find_serializer_class(object, options, override_with_options).new(object, options)
     end
 
     def self.serialize(objects, options = {})
