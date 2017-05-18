@@ -235,7 +235,7 @@ module JSONAPI
 
     def self.find_serializer_class_name(object, options, override_with_options = false)
       if override_with_options && options[:serializer]
-        return options[:serializer]
+        return options[:serializer].to_s
       end
       if options[:namespace]
         return "#{options[:namespace]}::#{object.class.name}Serializer"
