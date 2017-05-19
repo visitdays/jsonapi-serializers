@@ -352,7 +352,7 @@ module JSONAPI
         objects.compact.each do |obj|
           # Use the mutability of relationship_data as the return datastructure to take advantage
           # of the internal special merging logic.
-          find_recursive_relationships(obj, inclusion_tree, relationship_data, passthrough_options)
+          find_recursive_relationships(obj, inclusion_tree, relationship_data, passthrough_options, true)
         end
 
         result['included'] = relationship_data.map do |_, data|
@@ -449,12 +449,12 @@ module JSONAPI
     #   ['users', '1'] => {object: <User>, include_linkages: []},
     #   ['users', '2'] => {object: <User>, include_linkages: []},
     # }
-    def self.find_recursive_relationships(root_object, root_inclusion_tree, results, options)
+    def self.find_recursive_relationships(root_object, root_inclusion_tree, results, options, is_master_root = false)
       root_inclusion_tree.each do |attribute_name, child_inclusion_tree|
         # Skip the sentinal value, but we need to preserve it for siblings.
         next if attribute_name == :_include
 
-        serializer = JSONAPI::Serializer.find_serializer(root_object, options, true)
+        serializer = JSONAPI::Serializer.find_serializer(root_object, options, is_master_root)
         unformatted_attr_name = serializer.unformat_name(attribute_name).to_sym
 
         # We know the name of this relationship, but we don't know where it is stored internally.
@@ -531,7 +531,7 @@ module JSONAPI
         if !child_inclusion_tree.empty?
           # For each object we just loaded, find all deeper recursive relationships.
           objects.each do |obj|
-            find_recursive_relationships(obj, child_inclusion_tree, results, options)
+            find_recursive_relationships(obj, child_inclusion_tree, results, options, false)
           end
         end
       end
